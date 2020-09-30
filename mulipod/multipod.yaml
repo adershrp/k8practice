@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: multipod
+  name: multipod
+spec:
+  containers:
+  - name: box1
+    image: busybox
+    args:
+    - /bin/sh
+    - -c
+    - ls; sleep 3600
+  - name: box2
+    image: busybox
+    args:
+    - /bin/sh
+    - -c   
+    - echo 'Hello World'; sleep 3600
+  - name: box3
+    image: busybox
+    args: 
+    - /bin/sh
+    - -c
+    - echo 'Hello from third container'; sleep 3600
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}

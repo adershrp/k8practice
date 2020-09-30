@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  application.properties: |
+    property1=value1
+    property2=value2
+    property3=value3
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: file-config

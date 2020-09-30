@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: busybox
+    tier: busybox
+  name: busybox-deploy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: busybox
+      tier: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+        tier: busybox
+    spec:
+      volumes:
+        - name: configmap
+          configMap:
+            name: busybox-config
+      containers:
+        - args:
+            - /bin/sh
+            - -c
+            - echo sleeping;sleep 3000
+          image: busybox
+          imagePullPolicy: Always
+          name: busybox-deploy
+          volumeMounts:
+            - name: configmap
+              mountPath: /app/configmap
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi

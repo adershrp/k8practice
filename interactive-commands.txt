@@ -1,0 +1,121 @@
+# pod with resource limits and service
+kubectl run busybox-pod --dry-run --image=busybox --restart=Never --requests=cpu=250m,memmory=256Mi --limits=cpu=500m,memmory=512Mi -l app=busybox,tier=frontend --env=APP_CONFIG=test --port 8080 --expose=true -o yaml -- env
+
+#cron job
+kubectl run busybox-pod --dry-run --image=busybox --restart=OnFailure --schedule="* 0/5 * * *" --requests=cpu=250m,memmory=256Mi --limits=cpu=500m,memmory=512Mi -l app=busybox,tier=frontend --env=APP_CONFIG=test  -o yaml -- env
+
+#job
+kubectl run busybox-pod --dry-run --image=busybox --restart=OnFailure --requests=cpu=250m,memmory=256Mi --limits=cpu=500m,memmory=512Mi -l app=busybox,tier=frontend --env=APP_CONFIG=test  -o yaml -- env
+
+#label, environment and args
+kubectl run busybox-pod --dry-run --image=busybox --restart=Never --requests=cpu=250m,memmory=256Mi --limits=cpu=500m,memmory=512Mi -l app=busybox,tier=frontend --env=APP_CONFIG=test  -o yaml -- env
+
+#run wget from busybox, connect to another running pod
+    RUN wget print to command prompt(-it) and delete(--rm)
+    --it print output to console
+    --rm remove the pod after finishing the job
+kubectl run busybox --image=busybox --rm -it --restart=Never  -- wget 10.1.0.150
+
+#command and args
+kubectl run busybox --image=busybox --restart=Never --rm -it --command echo -- "hello world"
+
+#args to echo and sleep
+kubectl run busybox --image=busybox --restart=Never --dry-run -oyaml -- /bin/sh -c "echo hello;sleep 3600"
+
+#show all the labels
+kubectl get po --show-labels
+kubectl get po -ocustom-columns=LABELS:.metadata.labels,POD:.metadata.name
+kubectl label po --all --list
+
+
+#update a label
+kubectl label po nginx2 app=v2 --overwrite
+
+#add a new label
+kubectl label po nginx2 app=v2
+kubectl label pods nginx1 nginx2 app=v1 // multiple pod same label
+kubectl label po nginx1 nginx2 nginx3 abc=1 xyz=2 // multiple pod multiple label
+kubectl run nginx-pod --image nginx --restart=Never -l app=nginx,tier=server --dry-run -oyaml // multiple label while creating a pod
+
+
+#list all the resources, and list if there is a specific label's value.
+kubectl get po -L app // -L --label-columns
+
+#list based on the specific label value
+kubectl get po -l app=v2 // -l or --selector
+kubectl get po -lapp=v2
+
+#remove a particular label from all the pods
+kubectl label pods --all app-
+
+
+#adding annotation
+kubectl annotate po nginx1 nginx2 nginx3 description='description'
+kubectl annotate po --all description='description'
+kubectl annotate po --all description- // removing
+
+#create deployment
+kubectl run nginx --image=nginx:1.7.8 --replicas=2 --port=80 -l app=nginx,tier=server
+kubectl get rs -lapp=nginx -oyaml // query replicaset using label
+
+#rollout
+kubectl rollout status deploy nginx
+kubectl rollout history deploy nginx
+kubectl rollout undo deploy nginx
+
+#update image
+kubectl set image deploy nginx nginx=nginx:1.7.9
+
+#update resource for multiple deployment
+kubectl set resources deployment --all --limits=cpu=100m,memory=124Mi --requests=cpu=50m,memory=64Mi
+kubectl set image pod -lapp=v1 nginx=nginx:1.7.8 // using label
+kubectl set resources deploy -ltier=server --requests=cpu=100m,memory=128Mi
+kubectl set resources deploy -lapp=backend --requests=cpu=150m,memory=192Mi
+
+#updating secret to an existing deployment
+kubectl set env --from=secret/db-secret pod webapp-pod --dry-run -oyaml // pod we cannot update. will work as a key value
+
+#create a configmap from a properties file
+kubectl create configmap game-config --from-env-file=configure-pod-container\configmap\game-env-file.properties --dry-run -oyaml
+kubectl set env --from=configmap/game-config pod webapp-pod --dry-run -oyaml // pod we cannot update. will work as a key value
+kubectl set env --from=configmap/game-config  deploy busybox-deploy --dry-run -oyaml // updating deployment only environment variables.
+
+
+#job
+kubectl create job busybox --image=busybox  -- /bin/sh -c "echo hello;sleep 30;echo world;"
+activeDeadlineSeconds: 30 // after 30's pod will be terminated, if job is not yet finished. (entire job.. even if there is n number of completions)
+ttlSecondsAfterFinished: 0 // remove the job immediately after finishing the job. - maynot be available.
+
+#cronjob
+kubectl create cronjob busybox --image=busybox --schedule="0/5 * * * *" --restart=OnFailure --dry-run -oyaml -- /bin/sh -c "echo hello;sleep 30;echo world;"
+
+
+#taint and tolerations
+With this we can restrict a node from accepting certain pods. Apply taint on Node and toleration on Pod. A pod with certain toleration can be placed to a node, but it doesn't stop it from going to another node.
+kubectl taint nodes foo dedicated=special-user:NoSchedule
+
+
+#nodeselectors
+simple usage of label and selectors. with this we can dedicate a pod to place on only matching node.
+
+#nodeaffinity
+pod.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution => selectors specified required to place it in a node. ignored if any change happen to node while executing.
+node affinity can provide more complex nodeselectors option.
+
+#multi container
+sidecar - collecting log and sending to a centralized server
+adapter - collect log and do transformation and send to centralized server
+ambasdor - facade pattern / connecting to different database based on the environment
+
+
+#probes
+liveness probe :- container to be killed and restarted if the probe fails. restartPolicy of Always or OnFailure required. If container crash itself, this doesn't serve any purpose. this help us to restart the container over if the container fails to respond over a period of time. reaching failureThreshold means, container will follw the restart policy defined.
+
+
+readiness probe :- sending traffic to pod only after this probe is succeed. containers start in the pod, only accept the traffic if this probe is success. this can be the same endpoint as liveness probe. if consecutive failure for this probe and reaching the threshold means, container will be unready to take further traffic.
+
+#services
+kubectl get svc nginx --template={{.spec.clusterIP}}
+kubectl get ep // endpoints
+kubectl run busybox --rm -it --image=busybox --restart=Never -- /bin/sh -c "wget -O- 10.111.65.23:80"
+                                                                                                                   

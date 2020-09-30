@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    job-name: busyjob
+  name: busyjob
+  namespace: default
+spec:
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        job-name: busyjob
+    spec:
+      containers:
+      - command: ["perl", "-Mbignum=bpi", "-wle", "'print  bpi(2000)'"]
+        image: perl
+        imagePullPolicy: Always
+        name: busyjob
+      restartPolicy: Never

@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: null
+  labels:
+    app: perl-job
+    tier: job
+  name: perl-job
+spec:
+  activeDeadlineSeconds: 30
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: perl-job
+        tier: job
+    spec:
+      containers:
+      - args:
+        - perl
+        - -Mbignum=bpi
+        - -wle
+        - print bpi(2000)
+        image: perl
+        name: perl-job
+        resources: {}
+      restartPolicy: OnFailure
+status: {}

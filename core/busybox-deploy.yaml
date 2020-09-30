@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 5
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: busybox
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      volumes:
+        - name: file-config
+          configMap:
+            name: file-config
+            items:
+              - key: application.properties
+                path: application.properties
+      containers:
+        - env:
+            - name: PROP3
+              valueFrom:
+                configMapKeyRef:
+                  key: prop3
+                  name: sample-config
+            - name: PROP1
+              valueFrom:
+                configMapKeyRef:
+                  key: prop1
+                  name: sample-config
+            - name: PROP2
+              valueFrom:
+                configMapKeyRef:
+                  key: prop2
+                  name: sample-config
+          envFrom:
+            - configMapRef:
+                name: sample-config
+            - secretRef:
+                name: sample-config
+          volumeMounts:
+            - mountPath: /app/config
+              name: file-config
+          image: busybox
+          imagePullPolicy: Always
+          name: busybox
+          command: ["/bin/sh", "-c", "sleep 3600"]
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

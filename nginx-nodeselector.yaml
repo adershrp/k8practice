@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: nginx
+    tier: server
+  name: nginx-pod
+spec:
+  containers:
+    - image: nginx
+      name: nginx-pod
+  restartPolicy: Never
+  nodeSelector:
+    accelerator: nvidia-tesla-p100

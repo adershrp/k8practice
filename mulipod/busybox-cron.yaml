@@ -1,0 +1,24 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: busyboxcron
+  namespace: default
+spec:
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      name: busyboxcron
+    spec:
+      template:
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - date; echo 'Hello from K8s cluster';
+            image: busybox
+            imagePullPolicy: Always
+            name: busyboxcron
+          restartPolicy: OnFailure
+  schedule: '*/1 * * * *'
+  successfulJobsHistoryLimit: 3
